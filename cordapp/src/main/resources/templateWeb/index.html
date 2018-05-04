@@ -1,11 +1,271 @@
-<!-- Define your frontend here. -->
+<!--
+--------
+WARNING:
+--------
+
+THIS CODE IS ONLY MADE AVAILABLE FOR DEMONSTRATION PURPOSES AND IS NOT SECURE! DO NOT USE IN PRODUCTION!
+
+FOR SECURITY REASONS, USING A JAVASCRIPT WEB APP HOSTED VIA THE CORDA NODE IS NOT THE RECOMMENDED WAY TO INTERFACE
+WITH CORDA NODES! HOWEVER, FOR THIS PRE-ALPHA RELEASE IT'S A USEFUL WAY TO EXPERIMENT WITH THE PLATFORM AS IT ALLOWS
+YOU TO QUICKLY BUILD A UI FOR DEMONSTRATION PURPOSES.
+
+GOING FORWARD WE RECOMMEND IMPLEMENTING A STANDALONE WEB SERVER THAT AUTHORISES VIA THE NODE'S RPC INTERFACE. IN THE
+COMING WEEKS WE'LL WRITE A TUTORIAL ON HOW BEST TO DO THIS.
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Template CorDapp</title>
+    <title>Digital Ledger Demo</title>
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <!--<link rel="stylesheet" href="css/bootstrap.min.css">-->
+    <link rel="stylesheet" href="css/bootstrap-theme.css">
+    <!--<link rel="stylesheet" href="css/bootstrap-theme.min.css">-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.0-rc.1/angular.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.2.0/ui-bootstrap-tpls.min.js"></script>
+    <script src="js/angular-module.js"></script>
 </head>
-<body>
-<div>Template CorDapp frontend.</div>
+<body ng-app="demoAppModule" ng-controller="DemoAppController as demoApp">
+
+<!-- Top Nav Bar -->
+<nav class="navbar navbar-default">
+    <div class="img-rounded" aria-hidden="false" style="left: 271px;">
+        <a class="img-rounded" href="/">
+            <img src="Components/hsbc_logo.png" alt="HSBC logo Home"></a>
+    </div>
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">{{demoApp.thisNode}}</a>
+        </div>
+
+        <!--<span ng-if="demoApp.thisNode == 'Issuer'" >-->
+        <button ng-click="demoApp.openModal()" type="button" class="btn btn-primary navbar-btn">Create CA</button>
+        <!--</span>-->
+
+        <!--<span ng-if="demoApp.thisNode != 'Issuer' && demoApp.thisNode != 'AgentD'" >-->
+            <button ng-click="demoApp.openSubscribeModal()" type="button" class="btn btn-primary navbar-btn">Subscribe</button></span>
+        <!--</span>-->
+
+        <button ng-click="demoApp.getIOUs()" type="button" class="btn btn-default navbar-btn"><span class="glyphicon glyphicon-refresh"></span></button>
+
+    </div>
+</nav>
+
+
+<script type="text/ng-template" id="demoAppModal.html">
+    <div class="modal-header">
+        <h4 class="modal-title">Add new CA</h4>
+    </div>
+    <div>
+    <form>
+        <div class="modal-body">
+            <!--
+            <div class="form-group">
+                <label class="control-label">Counter-party:</label>
+
+                <div ng-repeat="peer in modalInstance.peers"  >
+                    <input type="checkbox" ng-checked="modalInstance.isChecked(peer)"
+                           ng-click="modalInstance.updateSelection( peer)" />{{peer}}!
+                </div>
+
+            </div> -->
+            Subscribed:
+            <div ng-repeat="parties in modalInstance.form.counterparties"  >
+                {{parties}}
+            </div>
+            <div class="form-group">
+
+                <label for="reference" class="control-label">Reference:</label>
+                <input type="text" ng-model="modalInstance.form.reference" class="form-control" id="reference">
+                <label for="type" class="control-label">Type (e.g. DVCA):</label>
+                <input type="text" ng-model="modalInstance.form.type" class="form-control" id="type">
+                <label for="stock" class="control-label">Stock (e.g. CN1028348482):</label>
+                <input type="text" ng-model="modalInstance.form.stock" class="form-control" id="stock"
+                       ng-change="modalInstance.onChangeStock()">
+                <label for="exDate" class="control-label">Ex-Date (Date, e.g. 20170102):</label>
+                <input type="text" ng-model="modalInstance.form.exDate" class="form-control" id="exDate">
+                <label for="option" class="control-label">Option (e.g. CASH):</label>
+                <input type="text" ng-model="modalInstance.form.option" class="form-control" id="option">
+                <label for="value" class="control-label">Amount (Int):</label>
+                <input type="text" ng-model="modalInstance.form.value" class="form-control" id="value">
+                <label for="recordDate" class="control-label">Record Date (Date, e.g. 20171001):</label>
+                <input type="text" ng-model="modalInstance.form.recordDate" class="form-control" id="recordDate">
+                <label for="payDate" class="control-label">Income Pay Date (Date, e.g. 20171003):</label>
+                <input type="text" ng-model="modalInstance.form.payDate" class="form-control" id="payDate">
+                <!--<label for="createTime" class="control-label">Transaction Time:</label>-->
+                <!--<input type="text" ng-model="modalInstance.form.createTime" class="form-control" id="createTime"-->
+                        <!--ng-switch-default="{Date.now().toString()}">-->
+            </div>
+            <div ng-show="modalInstance.formError" class="form-group">
+                <div class="alert alert-danger" role="alert">
+                    <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                    <span class="sr-only">Error:</span>
+                    Enter valid CA parameters
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button ng-click="modalInstance.cancel()" type="button" class="btn btn-default">Close</button>
+            <button ng-click="modalInstance.create()" type="button" class="btn btn-primary">Create CA</button>
+        </div>
+    </form>
+    </div>
+</script>
+<script type="text/ng-template" id="subscribe.html">
+    <div class="modal-header">
+        <h4 class="modal-title">Subscribe CA</h4>
+    </div>
+    <form>
+        <div class="modal-body">
+
+            <div class="form-group">
+
+                <label for="stock" class="control-label">Stock (e.g. CN1028348482):</label>
+                <input type="text" ng-model="subModalInstance.form.stock" class="form-control" id="stock">
+
+            </div>
+            <div ng-show="subModalInstance.formError" class="form-group">
+                <div class="alert alert-danger" role="alert">
+                    <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                    <span class="sr-only">Error:</span>
+                    Enter valid parameters
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button ng-click="subModalInstance.cancel()" type="button" class="btn btn-default">Close</button>
+            <button ng-click="subModalInstance.create()" type="button" class="btn btn-primary">Subscribe</button>
+        </div>
+    </form>
+    </div>
+</script>
+
+<script type="text/ng-template" id="messageContent.html">
+    <div class="modal-body" id="modal-body">
+        {{ modalInstanceTwo.message }}
+    </div>
+</script>
+
+<!--The left hand side bar  -->
+
+<div class="row">
+
+    <!--Blank the left column -->
+    <div class="col-sm-1"></div>
+
+    <!--This is for left Bar-->
+
+    <!--<div class="col-sm-3" ng-show="demoApp.thisNode != 'Issuer' && demoApp.thisNode != 'AgentD' && demoApp.thisNode != 'Controller'">-->
+
+    <!--Subscription Bar -->
+    <div class="col-sm-3">
+        <div ng-show="!demoApp.subscribed.length  " class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title">There are no subscribed</h3>
+            </div>
+            <span ng-if="demoApp.thisNode != 'Issuer'" >
+                <div class="panel-body">Use the "Subscribe" button to subscribe CA.</div>
+            </span>
+        </div>
+        <div ng-show="demoApp.subscribed.length" class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title">Subscribed stocks:</h3>
+            </div>
+        </div>
+
+        <div ng-show="demoApp.subscribed.length"  class="panel panel-default">
+            <div class="panel-body">
+                <ul>
+                    <li ng-repeat=" sub in demoApp.subscribed" >{{sub}}</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="panel panel-primary">
+
+            <div class = "panel-heading">
+                <h3 class = "panel-title">CA Reference: </h3>
+            </div>
+
+            <div ng-show="!demoApp.ious.length" class="panel-body">Use the "Create CA" button to send an CA to a peer.</div>
+
+
+            <div ng-show="demoApp.ious.length" class="list-group">
+
+                    <button  ng-repeat="(ref,ious) in demoApp.ious"  class="list-group-item" type="button"
+                             ng-click="demoApp.Select_CA_Ref(ref) " ng-show="ref !='length'">
+                        {{ref}}
+                    </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!--Central Context -->
+    <div class="col-sm-7">
+        <div ng-show="!demoApp.ious.length" class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title">There are no recorded CAs</h3>
+            </div>
+            <span ng-if="demoApp.thisNode == 'Issuer'" >
+                <div class="panel-body">Use the "Create CA" button to send an CA to a peer.</div>
+            </span>
+        </div>
+        <div ng-show="demoApp.ious.length" class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title">Recorded CAs:</h3>
+            </div>
+        </div>
+        <div ng-repeat="(ref,ious) in demoApp.ious"  >
+            <!--<div ng-show="ref != 'length' " >-->
+            <div ng-show="ref == demoApp.CA_Ref" >
+                <h3 class="panel-title">Reference: {{ref}}</h3>
+                <div ng-repeat="iou in ious" class="panel panel-default">
+                    <div class="panel-body">
+                        <ul>
+                            <li>Sender: {{iou.sender}}</li>
+                            <li>Recipient: {{iou.recipient}}</li>
+                            <li>Reference: {{iou.iou.reference}}</li>
+                            <li>Type: {{iou.iou.type}}</li>
+                            <li>Stock: {{iou.iou.stock}}</li>
+                            <li>Ex-Date: {{iou.iou.exDate}}</li>
+                            <li>Option: {{iou.iou.option}}</li>
+                            <li>Amount: {{iou.iou.value}}</li>
+                            <li>Record Date: {{iou.iou.recordDate}}</li>
+                            <li>Income Pay Date: {{iou.iou.payDate}}</li>
+
+                            <span ng-if="demoApp.thisNode != 'AgentD' && demoApp.thisNode != 'Issuer' && iou.recipient != 'AgentD'" >
+                    <button ng-click="demoApp.forward2(iou.sender, iou.recipient, iou.iou.value, iou.iou.reference, iou.iou.recordDate, iou.iou.exDate, iou.iou.payDate, iou.iou.stock, iou.iou.option, iou.iou.type)"
+                            type="button" class="btn btn-primary">Forward to Agent with rule:</button>&nbsp;&nbsp;
+                                <select id="rulesScamble" >
+                                    <option value="Forward rule1" SELECTED >Forward rule1</option>
+                                    <option value="Forward rule2" SELECTED >Forward rule2</option>
+                                </select>
+                                <select id="Recipients" >
+                                    <option value="REC1" SELECTED >AgentC</option>
+                                    <option value="REC2" SELECTED >AgentD</option>
+                                </select>
+
+                    </span>
+
+                        </ul>
+
+                        <ul>
+
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-1"></div>
+
+</div>
+
+
 </body>
 </html>

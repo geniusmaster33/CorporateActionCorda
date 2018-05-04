@@ -1,0 +1,26 @@
+<div class="modal-header">
+    <h4 class="modal-title">Subscribe CA</h4>
+</div>
+<form>
+    <div class="modal-body">
+
+        <div class="form-group">
+
+            <label for="stock" class="control-label">Stock (e.g. CN1028348482):</label>
+            <input type="text" ng-model="subModalInstance.form.stock" class="form-control" id="stock">
+
+        </div>
+        <div ng-show="subModalInstance.formError" class="form-group">
+            <div class="alert alert-danger" role="alert">
+                <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                <span class="sr-only">Error:</span>
+                Enter valid parameters
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button ng-click="subModalInstance.cancel()" type="button" class="btn btn-default">Close</button>
+        <button ng-click="subModalInstance.create()" type="button" class="btn btn-primary">Subscribe</button>
+    </div>
+</form>
+</div>

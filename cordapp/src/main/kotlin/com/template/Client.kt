@@ -1,5 +1,6 @@
 package com.template
 
+import com.template.state.IOUState
 import net.corda.client.rpc.CordaRPCClient
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.utilities.NetworkHostAndPort.Companion.parse
@@ -17,7 +18,7 @@ fun main(args: Array<String>) {
 private class TemplateClient {
     companion object {
         val logger: Logger = loggerFor<TemplateClient>()
-        private fun logState(state: StateAndRef<TemplateState>) = logger.info("{}", state.state.data)
+        private fun logState(state: StateAndRef<IOUState>) = logger.info("{}", state.state.data)
     }
 
     fun main(args: Array<String>) {
@@ -28,10 +29,9 @@ private class TemplateClient {
         // Can be amended in the com.template.MainKt file.
         val proxy = client.start("user1", "test").proxy
 
-        // Grab all existing TemplateStates and all future TemplateStates.
-        val (snapshot, updates) = proxy.vaultTrack(TemplateState::class.java)
+        val (snapshot, updates) = proxy.vaultTrack(IOUState::class.java)
 
-        // Log the existing TemplateStates and listen for new ones.
+        // Log the 'placed' IOU states and listen for new ones.
         snapshot.states.forEach { logState(it) }
         updates.toBlocking().subscribe { update ->
             update.produced.forEach { logState(it) }

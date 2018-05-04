@@ -1,10 +1,14 @@
 package com.template
 
+import com.google.common.util.concurrent.Futures
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.utilities.getOrThrow
+import net.corda.node.services.transactions.SimpleNotaryService
+import net.corda.node.services.transactions.ValidatingNotaryService
 import net.corda.testing.driver.DriverParameters
 import net.corda.testing.driver.driver
 import net.corda.testing.node.User
+
 
 /**
  * This file is exclusively for being able to run your nodes through an IDE (as opposed to using deployNodes)
@@ -19,15 +23,25 @@ import net.corda.testing.node.User
  * 4. Set your breakpoints in your CorDapp code.
  * 5. Run the "Debug CorDapp" remote debug run configuration.
  */
+
+
 fun main(args: Array<String>) {
     // No permissions required as we are not invoking flows.
-    val user = User("user1", "test", permissions = setOf())
+    val user = User("user1", "test", permissions = setOf("ALL"))
     driver(DriverParameters(isDebug = true, waitForAllNodesToFinish = true)) {
-        val (partyA, partyB) = listOf(
-                startNode(providedName = CordaX500Name("PartyA", "London", "GB"), rpcUsers = listOf(user)),
-                startNode(providedName = CordaX500Name("PartyB", "New York", "US"), rpcUsers = listOf(user))).map { it.getOrThrow() }
+        val (partyA, partyB, partyC) = listOf(
+                startNode(providedName = CordaX500Name("Issuer", "London", "GB"), rpcUsers = listOf(user)),
+                startNode(providedName = CordaX500Name("BankA", "London", "GB"), rpcUsers = listOf(user)),
+                startNode(providedName = CordaX500Name("BankB", "London", "GB"), rpcUsers = listOf(user)),
+                startNode(providedName = CordaX500Name("AgentD", "London", "GB"), rpcUsers = listOf(user)),
+                startNode(providedName = CordaX500Name("AgentC", "London", "GB"), rpcUsers = listOf(user))).map { it.getOrThrow() }
 
         startWebserver(partyA)
         startWebserver(partyB)
+        startWebserver(partyC)
     }
 }
+
+
+
+
